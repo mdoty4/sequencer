@@ -8,8 +8,8 @@ While it began as a proxy for LM Studio, Sequencer is designed as a universal ga
 
 Most developers use AI agents (like Cline or Aider) in a linear chat. Sequencer moves you to an **assembly line** model:
 1.  **Design**: Create a sequence of tasks (prompts).
-2.  **Assign**: Choose the best agent for each specific task (e.g., Cline for architecture, Aider for implementation).
-3.  **Orchestrate**: Execute the entire pipeline in one click, with real-time status tracking for every step.
+2.  **Assign**: Choose the best agent for each specific task.
+3.  **Start Sequence**: Execute the entire pipeline in one click, with real-time status tracking for every step.
 
 ## ✨ Key Features
 
