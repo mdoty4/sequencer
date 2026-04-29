@@ -1,0 +1,14 @@
+{
+  "projects": [],
+  "activeProjectId": null,
+  "aiderConfig": {
+    "apiBase": "http://localhost:1234/v1",
+    "apiKey": "your-api-key",
+    "model": "your-model-name",
+    "maxTokens": "16384"
+  },
+  "telegramConfig": {
+    "botToken": "",
+    "chatId": ""
+  }
+}

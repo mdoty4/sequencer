@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+logs/
+.env
+.git
+.gitignore
+*.md
+.DS_Store
+*.log
+docker-compose.yml
+test_api.sh
+verify_isolation.sh

@@ -1,0 +1,35 @@
+{
+  "name": "sequencer",
+  "version": "1.0.0",
+  "description": "Visual AI Agent Workflow Orchestrator - Design, visualize, and execute complex AI pipelines by chaining multiple prompts and agents into repeatable workflows.",
+  "main": "sequencer.js",
+  "scripts": {
+    "start": "node sequencer.js",
+    "dev": "npx nodemon sequencer.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "orchestration",
+    "pipeline",
+    "workflow",
+    "cline",
+    "aider",
+    "llm",
+    "automation"
+  ],
+  "author": {
+    "name": "Michael Doty",
+    "email": "michaeldoty.pro@gmail.com",
+    "url": "https://github.com/mdoty4"
+  },
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.15.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}

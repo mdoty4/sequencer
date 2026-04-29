@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment variables (contains sensitive config)
+.env
+
+# Logs
+logs/
+*.log
+app.log
+npm-debug.log*
+
+# Project state (may contain sensitive data)
+prompts.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+coverage/

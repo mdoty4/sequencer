@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sequencer: Task Orchestrator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+    <body>
+        <!-- ── App Header ── -->
+        <header class="app-header">
+            <h1>Sequencer: <span id="sequence-status-text">Task Orchestrator</span></h1>
+        </header>
+
+        <!-- ── Tab Navigation ── -->
+        <div class="tabs-wrapper">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="projects">
+                    <span class="tab-icon">📁</span>Projects
+                </button>
+                <button class="tab-btn" data-tab="pipeline">
+                    <span class="tab-icon">⚡</span>Pipeline
+                </button>
+                <button class="tab-btn" data-tab="requirements">
+                    <span class="tab-icon">💬</span>Requirements
+                </button>
+                <button class="tab-btn" data-tab="log-viewer">
+                    <span class="tab-icon">📋</span>Logs & Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Projects Tab (was combined with Pipeline) ── -->
+        <div id="projects" class="tab-content active">
+            <div class="container">
+                <h2>Projects</h2>
+                <div class="active-project-banner" id="active-project-display">Active Project: None</div>
+                
+                <div class="project-controls">
+                    <input type="text" id="new-project-name" placeholder="Project Name...">
+                    <input type="text" id="new-project-workingDir" placeholder="Working Directory (e.g., ./my-app, leave empty for current)">
+                    <button class="btn btn-success" id="btn-create-project">Create Project</button>
+                </div>
+
+                <div class="session-list">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                        <th>Working Dir</th>
+                    <th>ID</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-body">
+                            <tr><td colspan="4" style="text-align:center">Loading projects...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div><!-- /container -->
+        </div>
+
+        <!-- ── Global Action Bar (visible on Projects tab) ── -->
+        <div id="global-action-bar" class="global-action-bar hidden">
+            <button id="btn-run-pipeline" class="action-btn btn-run">
+                ▶ Run Pipeline
+            </button>
+            <button id="btn-stop" class="action-btn btn-stop" disabled>
+                ⏹ Stop
+            </button>
+            <button id="btn-save" class="action-btn btn-save">
+                💾 Save
+            </button>
+            <div id="action-bar-status" class="action-bar-status"></div>
+        </div>
+
+        <!-- ── Live Output Terminal Panel (visible on Projects tab) ── -->
+        <div id="terminal-panel" class="terminal-panel">
+            <div class="terminal-header" id="terminal-header-toggle">
+                <span>⌨️ Live Output</span>
+                <span id="terminal-toggle-icon">▼</span>
+            </div>
+            <div id="terminal-content" class="terminal-content">
+                <div id="terminal-log" class="terminal-log"></div>
+            </div>
+        </div>
+
+        <!-- ── Pipeline Tab ── -->
+        <div id="pipeline" class="tab-content">
+            <div class="container">
+                <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #ddd;">
+                <h2>Automation Pipeline</h2>
+                    <p>Build your prompt sequence. Toggle tasks to select which ones run during orchestration.</p>
+                    
+                    <div id="orchestration-bar" class="orchestration-bar" style="display: none;">
+                        <button class="btn-orchestrate" id="btn-start-orchestration">▶ Start Sequence</button>
+                        <button class="btn-stop-sequence" id="btn-stop-sequence" disabled>⏹ Stop Sequence</button>
+                        <button class="btn-reset-tasks" id="btn-reset-tasks">↻ Reset Tasks</button>
+                        <select class="agent-select-all" id="assign-all-agents" title="Assign agent to all tasks">
+                            <option value="">— Assign All —</option>
+                            <option value="aider">Aider</option>
+                            <option value="cline">Cline</option>
+                            <option value="telegram">Telegram</option>
+                        </select>
+                        <div class="orchestration-status" id="orchestration-status"></div>
+                    </div>
+                    
+                    <div id="pipeline-editor" class="pipeline-editor">
+                        <!-- Prompt rows will be injected here -->
+                    </div>
+                    
+                    <button class="btn btn-success" style="margin-top: 1rem;" id="btn-add-prompt">+ Add Prompt</button>
+            </div><!-- /container -->
+        </div>
+
+        <!-- ── Requirements Tab ── -->
+        <div id="requirements" class="tab-content">
+            <div class="container">
+                <div class="project-context-bar">
+                    <select id="chat-project-select">
+                        <option value="">— Select Project —</option>
+                    </select>
+                    <button id="btn-create-chat-project">+ New Project</button>
+                    <input id="new-chat-project-name" placeholder="Project name..." style="display:none;">
+                </div>
+
+                <div class="chat-layout">
+                    <div class="chat-panel">
+                        <div id="chat-messages" class="chat-messages"></div>
+                        <div class="chat-input-area">
+                            <textarea id="chat-input" placeholder="Describe your project..."></textarea>
+                            <button id="btn-send-chat">Send</button>
+                        </div>
+                    </div>
+                    <div class="requirements-sidebar">
+                        <h3>Extracted Requirements</h3>
+                        <div id="requirements-list"></div>
+                        <button id="btn-add-to-pipeline" disabled>Add to Pipeline</button>
+                        <button id="btn-discard-all">Discard All</button>
+                    </div>
+                </div>
+            </div><!-- /container -->
+        </div>
+
+        <div id="log-viewer" class="tab-content">
+            <div class="container">
+                <!-- Settings trigger button -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="margin: 0;">Recorded Sessions</h2>
+                    <button class="settings-trigger" id="btn-open-settings">⚙️ Configuration</button>
+                </div>
+
+                <!-- Settings Drawer Backdrop -->
+                <div id="drawer-backdrop" class="drawer-backdrop"></div>
+
+                <!-- Settings Drawer -->
+                <div id="settings-drawer" class="settings-drawer">
+                    <div class="drawer-header">
+                        <h2>⚙️ Configuration</h2>
+                        <button class="drawer-close" id="btn-close-settings-drawer">✕</button>
+                    </div>
+                    <!-- Drawer Tab Switcher -->
+                    <div class="drawer-tabs">
+                        <button class="drawer-tab-btn active" data-drawer-tab="global">🌐 Global Config</button>
+                        <button class="drawer-tab-btn" data-drawer-tab="project">📁 Per-Project Config</button>
+                        <button class="drawer-tab-btn" data-drawer-tab="telegram">📨 Telegram</button>
+                    </div>
+                    <div class="drawer-body">
+                        <!-- Global Config Tab -->
+                        <div id="settings-tab-global" class="drawer-tab-content active">
+                            <p style="color: #666; font-size: 0.88rem; margin-top: 0; margin-bottom: 1rem;">Configure the LLM service settings globally. These defaults will be used when triggering agents for projects (unless project-level overrides are set).</p>
+                            <div class="config-section">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; font-size: 0.88rem;">API Base URL</label>
+                                <input type="text" id="config-apiBase" placeholder="http://localhost:1234/v1" class="config-input">
+                                <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Example: http://localhost:1234/v1 (LM Studio), https://api.openai.com/v1</small>
+                            </div>
+
+                            <div class="config-section" style="margin-top: 1rem;">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; font-size: 0.88rem;">API Key</label>
+                                <input type="password" id="config-apiKey" placeholder="sk-..." class="config-input">
+                                <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Your API key for the LLM service</small>
+                            </div>
+
+                            <div class="config-section" style="margin-top: 1rem;">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; font-size: 0.88rem;">Model Name</label>
+                                <input type="text" id="config-model" placeholder="Qwen3.6-35b-a3b-a3b" class="config-input">
+                                <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">The model to use with agents</small>
+                            </div>
+
+                            <div class="config-section" style="margin-top: 1rem;">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; font-size: 0.88rem;">Max Output Tokens</label>
+                                <select id="config-maxTokens" class="config-input">
+                                    <option value="4096">Starter — 4,096 tokens</option>
+                                    <option value="8192">Standard — 8,192 tokens</option>
+                                    <option value="16384" selected>Extended — 16,384 tokens</option>
+                                    <option value="32768">Unbounded — 32,768 tokens</option>
+                                </select>
+                                <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Maximum tokens for LLM responses (Requirements chat). Higher values allow more detailed task breakdowns.</small>
+                            </div>
+
+                            <div class="config-actions">
+                                <button class="btn btn-success" id="btn-save-global-config">💾 Save Global Config</button>
+                            </div>
+                        </div>
+
+                        <!-- Per-Project Config Tab -->
+                        <div id="settings-tab-project" class="drawer-tab-content">
+                            <p style="color: #666; font-size: 0.88rem; margin-top: 0; margin-bottom: 1rem;">Configure LLM service settings for a specific project. Project-level settings override the global defaults.</p>
+                            <div class="project-select-wrapper">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; font-size: 0.88rem;">Select Project</label>
+                                <select id="project-config-select" class="config-select">
+                                    <option value="">— Select a project —</option>
+                                </select>
+                            </div>
+
+                            <div id="project-config-fields" style="display: none;">
+                                <div class="config-section">
+                                    <label style="display: flex; align-items: center; justify-content: space-between;">
+                                        <span style="font-size: 0.88rem;">API Base URL</span>
+                                        <span id="project-apiBase-badge" class="override-badge" style="display: none;">OVERRIDDEN</span>
+                                    </label>
+                                    <input type="text" id="project-config-apiBase" placeholder="(inherits global)" class="config-input">
+                                    <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Leave empty to use global default</small>
+                                </div>
+
+                                <div class="config-section" style="margin-top: 1rem;">
+                                    <label style="display: flex; align-items: center; justify-content: space-between;">
+                                        <span style="font-size: 0.88rem;">API Key</span>
+                                        <span id="project-apiKey-badge" class="override-badge" style="display: none;">OVERRIDDEN</span>
+                                    </label>
+                                    <input type="password" id="project-config-apiKey" placeholder="(inherits global)" class="config-input">
+                                    <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Leave empty to use global default</small>
+                                </div>
+
+                                <div class="config-section" style="margin-top: 1rem;">
+                                    <label style="display: flex; align-items: center; justify-content: space-between;">
+                                        <span style="font-size: 0.88rem;">Model Name</span>
+                                        <span id="project-model-badge" class="override-badge" style="display: none;">OVERRIDDEN</span>
+                                    </label>
+                                    <input type="text" id="project-config-model" placeholder="(inherits global)" class="config-input">
+                                    <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Leave empty to use global default</small>
+                                </div>
+
+                                <div class="config-actions">
+                                    <button class="btn btn-success" id="btn-save-project-config">💾 Save Project Override</button>
+                                    <button class="btn" id="btn-clear-project-config" style="background: #95a5a6; color: white;">✕ Clear Override</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Telegram Config Tab -->
+                        <div id="settings-tab-telegram" class="drawer-tab-content">
+                            <p style="color: #666; font-size: 0.88rem; margin-top: 0; margin-bottom: 1rem;">Configure Telegram so you can send prompts to yourself via a bot. Select <strong>Telegram</strong> as the agent for any task to deliver the prompt text as a Telegram message.</p>
+
+                            <div class="config-section">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; font-size: 0.88rem;">Bot Token</label>
+                                <input type="password" id="telegram-bot-token" placeholder="123456:ABC-DEF..." class="config-input">
+                                <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Create a bot via <a href="https://t.me/BotFather" target="_blank" style="color: #0088cc;">@BotFather</a> on Telegram and paste the token here.</small>
+                            </div>
+
+                            <div class="config-section" style="margin-top: 1rem;">
+                                <label style="display: block; font-weight: bold; margin-bottom: 0.4rem; font-size: 0.88rem;">Chat ID</label>
+                                <input type="text" id="telegram-chat-id" placeholder="123456789 or @username" class="config-input">
+                                <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Message your bot, then get your Chat ID from <a href="https://t.me/userinfobot" target="_blank" style="color: #0088cc;">@userinfobot</a>.</small>
+                            </div>
+
+                            <div id="telegram-test-result" style="margin-top: 1rem; padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; display: none;"></div>
+
+                            <div class="config-actions" style="margin-top: 1.5rem;">
+                                <button class="btn btn-success" id="btn-save-telegram-config">💾 Save Telegram Config</button>
+                                <button class="btn" id="btn-test-telegram" style="background: #0088cc; color: white;">✈️ Send Test Message</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <!-- Bulk Action Bar -->
+                <div id="bulk-action-bar" class="bulk-action-bar hidden">
+                    <span id="selected-count"></span>
+                    <button class="btn btn-danger" id="btn-delete-selected">🗑️ Delete Selected (<span id="delete-count">0</span>)</button>
+                </div>
+
+                <div id="search-bar" class="search-bar">
+                    <input type="text" id="search-input" placeholder="Search sessions by ID, error, or project...">
+                    <button class="search-clear" id="btn-clear-search">✕ Clear</button>
+                    <span id="search-count" class="search-count"></span>
+                </div>
+
+                <h2 style="display: none;">Recorded Sessions</h2>
+                <div id="list-view">
+                    <div class="session-list">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="select-all-checkbox" title="Select all sessions">
+                            </th>
+                            <th>Session ID</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessions-body">
+                        <tr><td colspan="3" style="text-align:center">Loading sessions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+                    </div>
+                </div>
+            
+                <div id="detail-view">
+            <a class="back-link" id="btn-back-to-list">← Back to List</a>
+            <h2 id="session-title">Session Detail</h2>
+            
+            <!-- JSON View Toggle -->
+            <div class="json-view-toggle">
+                <button class="json-view-btn active" id="btn-tree-view">🌳 Tree</button>
+                <button class="json-view-btn" id="btn-raw-view">📄 Raw</button>
+            </div>
+            
+            <div id="chat-display" class="chat-container"></div>
+            <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #eee;">
+            <h3>JSON Viewer</h3>
+            <div id="json-tree-container" style="background: #272822; color: #f8f8f2; padding: 1rem; border-radius: 5px; overflow-x: auto; font-size: 0.82rem; max-height: 600px; overflow-y: auto;"></div>
+            <pre id="json-raw-content" style="background: #272822; color: #f8f8f2; padding: 1rem; border-radius: 5px; overflow-x: auto; font-size: 0.82rem; max-height: 600px; overflow-y: auto; display: none;"></pre>
+                </div>
+            </div><!-- /container -->
+        </div>
+
+         <!-- Project Editor Drawer -->
+         <div id="project-editor-backdrop" class="drawer-backdrop"></div>
+         <div id="project-editor-drawer" class="project-editor-drawer">
+             <div class="drawer-header">
+                 <h2>✏️ Edit Project</h2>
+                 <button class="drawer-close" id="btn-close-project-editor">✕</button>
+             </div>
+             <div class="drawer-body">
+                 <input type="hidden" id="editor-project-id">
+
+                 <div class="config-section">
+                     <label class="config-label">Project Name</label>
+                     <input type="text" id="editor-project-name" class="config-input" placeholder="Project name">
+                 </div>
+
+                 <div class="config-section">
+                     <label class="config-label">Working Directory</label>
+                     <input type="text" id="editor-project-workingDir" class="config-input" placeholder="./my-app">
+                     <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Relative to sequencer root, or leave empty for current directory</small>
+                 </div>
+
+                 <div class="config-section">
+                     <label class="config-label">Default Agent</label>
+                     <select id="editor-project-defaultAgent" class="config-select">
+                         <option value="aider">🟣 Aider</option>
+                         <option value="cline">🟠 Cline</option>
+                     </select>
+                     <small style="color: #888; display: block; margin-top: 4px; font-size: 0.76rem;">Agent used when running tasks for this project</small>
+                 </div>
+
+                 <hr style="margin: 1.5rem 0; border-top: 1px solid #eee;">
+
+                 <h3 style="font-size: 0.95rem; color: #667eea; margin-bottom: 1rem;">API Override Settings</h3>
+                 <p style="color: #666; font-size: 0.82rem; margin-bottom: 1rem;">Leave empty to use global defaults.</p>
+
+                 <div class="config-section">
+                     <label class="config-label">API Base URL</label>
+                     <input type="text" id="editor-apiBase" class="config-input" placeholder="(inherits global)">
+                 </div>
+
+                 <div class="config-section">
+                     <label class="config-label">API Key</label>
+                     <input type="password" id="editor-apiKey" class="config-input" placeholder="(inherits global)">
+                 </div>
+
+                 <div class="config-section">
+                     <label class="config-label">Model Name</label>
+                     <input type="text" id="editor-model" class="config-input" placeholder="(inherits global)">
+                 </div>
+
+                 <div class="config-actions">
+                     <button class="btn btn-success" id="btn-save-project-editor">💾 Save Changes</button>
+                     <button class="btn" id="btn-cancel-project-editor" style="background: #95a5a6; color: white;">Cancel</button>
+                 </div>
+             </div>
+         </div>
+
+        <!-- Module scripts (order matters for dependencies) -->
+        <script defer src="modules/dom-helpers.js?v=3"></script>
+        <script defer src="modules/core.js?v=4"></script>
+        <script defer src="modules/chat.js?v=2"></script>
+        <script defer src="modules/projects.js?v=3"></script>
+         <script defer src="modules/pipeline.js?v=5"></script>
+        <script defer src="modules/project-editor.js?v=3"></script>
+        <script defer src="modules/sessions.js?v=4"></script>
+        <script defer src="modules/json-viewer.js?v=3"></script>
+        <script defer src="modules/search.js?v=3"></script>
+         <script defer src="modules/settings.js?v=4"></script>
+         <script defer src="modules/terminal.js?v=2"></script>
+     </body>
+</html>
