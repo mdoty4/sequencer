@@ -143,7 +143,6 @@ To route an agent's requests through the Sequencer:
 - Navigate to the **Projects** tab and activate a project
 - In the **Pipeline** editor, add prompt rows
 - Assign an agent (Aider or Cline) to each row
-- Use the drag handle (`⠿`) to order your tasks logically
 - Toggle the "Orchestrate" switch for the tasks you want to include in the sequence
 
 ### 3. Executing the Sequence
