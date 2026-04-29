@@ -1,8 +1,6 @@
 # Sequencer: Visual AI Agent Workflow Orchestrator
 
-Sequencer is a powerful orchestration layer that transforms how you interact with autonomous AI agents. Instead of manual, one-off prompting, Sequencer allows you to design, visualize, and execute complex **AI Pipelines**—chaining multiple prompts and different agents into a single, repeatable workflow.
-
-While it began as a proxy for LM Studio, Sequencer is designed as a universal gateway capable of coordinating both local LLMs and enterprise-grade AI models.
+Sequencer is a local-first workflow orchestrator for chaining prompts, agents, and OpenAI-compatible LLM calls into repeatable pipelines.
 
 ## 🚀 Core Concept: From Chatting to Sequencing
 
