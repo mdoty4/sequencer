@@ -18,6 +18,12 @@ Most developers use AI agents (like Cline or Aider) in a linear chat. Sequencer 
 - **Project-Based Management**: Organize different sequences into dedicated projects.
 - **Transparent Logging**: Every exchange is captured in JSON format for audit and optimization.
 
+## Why I Built This
+
+I found myself manually coordinating workflows between LM Studio, coding agents, local models, and scripts. Repeating the same multi-step AI tasks became tedious and hard to reproduce.
+
+Sequencer is my attempt to turn those workflows into reusable, visual pipelines that work across both local and cloud-based models.
+
 ---
 
 ## 📋 Table of Contents
