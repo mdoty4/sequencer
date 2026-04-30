@@ -15,13 +15,14 @@
                 const editor = document.getElementById('pipeline-editor');
                 editor.innerHTML = '';
 
+                // Show orchestration bar whenever a project is active, regardless of task count
+                document.getElementById('orchestration-bar').style.display = 'flex';
+
                 if (tasks.length === 0) {
                     editor.innerHTML = '<p style="color: #666; text-align: center;">No tasks yet. Add one below.</p>';
-                    document.getElementById('orchestration-bar').style.display = 'none';
+                    updateOrchestrationButton();
                     return;
                 }
-
-                document.getElementById('orchestration-bar').style.display = 'flex';
 
                 tasks.forEach((task, index) => {
                     editor.appendChild(createPromptRow(task, index));
@@ -565,33 +566,69 @@
             bindPipelineEventListeners();
         }
 
-        /* ── Save all pending edits before page unload (tab close, navigation, refresh) ── */
-        async function saveAllPendingEdits() {
-            const editDivs = document.querySelectorAll('.prompt-text-edit');
-            let hasEdits = false;
+	/* ── Flush all pending throttle timeouts so they execute immediately ── */
+	async function flushPendingSaves() {
+		const pendingIndices = Object.keys(autoSaveTimeouts);
+		if (pendingIndices.length === 0) return;
 
-            for (const editDiv of editDivs) {
-                const row = editDiv.closest('.prompt-row');
-                if (!row) continue;
+		// Clear all pending timeouts to prevent them from firing later
+		for (const index of pendingIndices) {
+			if (autoSaveTimeouts[index]) {
+				clearTimeout(autoSaveTimeouts[index]);
+				delete autoSaveTimeouts[index];
+			}
+		}
 
-                const index = parseInt(row.dataset.index, 10);
-                if (isNaN(index)) continue;
+		// Now we need to re-read the current values from the DOM and save them
+		for (const indexStr of pendingIndices) {
+			const index = parseInt(indexStr, 10);
+			if (isNaN(index)) continue;
 
-                const currentValue = editDiv.textContent.trim();
-                if (!currentValue || currentValue === 'Enter prompt...') continue;
+			// Read the prompt from the display element (since editing is done)
+			const row = document.querySelector(`.prompt-row[data-index="${index}"]`);
+			if (!row) continue;
 
-                hasEdits = true;
-                // Force immediate save without throttle delay
-                await performAutoSave(index, currentValue);
-            }
+			const displayEl = row.querySelector('.prompt-text-display');
+			if (displayEl) {
+				const text = displayEl.textContent.trim();
+				if (text && text !== 'Click to edit prompt...') {
+					await performAutoSave(index, text);
+				}
+			}
+		}
+	}
 
-            // If there were edits, prevent the default close/navigation behavior
-            // (Note: browsers don't guarantee showing the confirmation dialog anymore,
-            // but setting returnValue is still required for best compatibility)
-            if (hasEdits) {
-                // The browser will show a confirmation dialog because we set returnValue below
-            }
-        }
+	/* ── Save all pending edits before page unload (tab close, navigation, refresh) ── */
+	async function saveAllPendingEdits() {
+		// Step 1: Flush any pending throttle timeouts so recently-blurred editors save
+		await flushPendingSaves();
+
+		// Step 2: Save any currently active inline editors
+		const editDivs = document.querySelectorAll('.prompt-text-edit');
+		let hasEdits = false;
+
+		for (const editDiv of editDivs) {
+			const row = editDiv.closest('.prompt-row');
+			if (!row) continue;
+
+			const index = parseInt(row.dataset.index, 10);
+			if (isNaN(index)) continue;
+
+			const currentValue = editDiv.textContent.trim();
+			if (!currentValue || currentValue === 'Enter prompt...') continue;
+
+			hasEdits = true;
+			// Force immediate save without throttle delay
+			await performAutoSave(index, currentValue);
+		}
+
+		// If there were edits, prevent the default close/navigation behavior
+		// (Note: browsers don't guarantee showing the confirmation dialog anymore,
+		// but setting returnValue is still required for best compatibility)
+		if (hasEdits) {
+			// The browser will show a confirmation dialog because we set returnValue below
+		}
+	}
 
         // Register beforeunload handler
         if (typeof window !== 'undefined') {
@@ -703,6 +740,9 @@
 
                 // Remove the task at the index
                 tasks.splice(index, 1);
+
+                // Reassign IDs after delete so the array is contiguous
+                tasks.forEach((t, i) => { t.id = i; });
 
                 // Save updated array to server
                 const saveResponse = await fetch(`/api/project/${activeProjectId}/tasks`, {
