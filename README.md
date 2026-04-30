@@ -20,9 +20,9 @@ Most developers use AI agents (like Cline or Aider) in a linear chat. Sequencer 
 
 ## Why I Built This
 
-I found myself manually coordinating workflows between LM Studio, coding agents, local models, and scripts. Repeating the same multi-step AI tasks became tedious and hard to reproduce.
+I found myself manually coordinating workflows between LM Studio, coding agents, local models, and scripts. Repeating the same multi-step AI tasks became tedious.
 
-Sequencer is my attempt to turn those workflows into reusable, visual pipelines that work across both local and cloud-based models.
+Sequencer is my attempt to turn those workflows into autonomous pipelines that work across both local and cloud-based models.
 
 ---
 
