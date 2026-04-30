@@ -1,4 +1,4 @@
-# Sequencer: Visual AI Agent Workflow Orchestrator (MOC Only.... for now...)
+# Sequencer: Visual AI Agent Workflow Orchestrator (MAC Only.... for now...)
 
 Sequencer is a local-first workflow orchestrator for chaining prompts, agents, and OpenAI-compatible LLM calls into repeatable pipelines.
 
